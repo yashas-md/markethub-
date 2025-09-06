@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MarkettingHUB — Prototype</title>
+  <style>
+    :root{ --primary:#6a0dad; --primary-700:#4b0082; --muted:#6b7280; --bg:#faf7ff; --card:#ffffff }
+    *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#f3eefe);min-height:100vh;display:flex;justify-content:center;padding:18px}
+    .app{width:100%;max-width:1100px}
+
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(255,255,255,0.85);backdrop-filter:blur(6px);border-radius:12px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-700));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px}
+    h1{font-size:18px;margin:0}
+    .controls{display:flex;gap:12px;align-items:center}
+    button, .btn{background:var(--primary);color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .ghost{background:transparent;color:var(--primary);border:1px solid rgba(106,13,173,0.12)}
+
+    main{display:grid;grid-template-columns:1fr 320px;gap:16px;margin-top:16px}
+    @media (max-width:900px){main{grid-template-columns:1fr} .sidebar{order:2}}
+
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(10,10,10,0.04)}
+
+    .search-row{display:flex;gap:8px;margin-bottom:12px}
+    .search-row input, select{flex:1;padding:10px;border-radius:8px;border:1px solid #eee}
+    .list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media (max-width:720px){.list{grid-template-columns:1fr}}
+
+    .product{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;border:1px solid #f2f0f6}
+    .thumb{width:104px;height:72px;border-radius:8px;background:#fafafa;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;overflow:hidden}
+    .thumb img{width:100%;height:100%;object-fit:cover}
+    .pmeta{flex:1}
+    .pmeta h3{margin:0;font-size:15px}
+    .pmeta p{margin:6px 0 0 0;color:var(--muted);font-size:13px}
+    .price{font-weight:700;color:var(--primary-700)}
+
+    .sidebar .section{margin-bottom:12px}
+    .avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#f3e9ff,#f9f0ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--primary-700)}
+
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:80}
+    .modal.show{display:flex}
+    .sheet{width:100%;max-width:680px;background:var(--card);padding:18px;border-radius:12px}
+    .form-row{display:flex;flex-direction:column;margin-bottom:10px}
+    label{font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text], input[type=email], input[type=password], textarea, input[type=number], select{padding:10px;border-radius:8px;border:1px solid #eee}
+    textarea{min-height:90px}
+
+    /* product detail */
+    .product-detail{display:flex;gap:16px}
+    @media (max-width:900px){.product-detail{flex-direction:column}}
+    .pd-img{width:320px;height:220px;border-radius:12px;background:linear-gradient(135deg,#fff,#faf5ff);display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .pd-img img{width:100%;height:100%;object-fit:cover}
+
+    /* cart */
+    .cart-item{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;border:1px solid #faf0ff}
+    .cart-item .thumb{width:72px;height:56px}
+
+    .nav-link{background:transparent;border:0;color:var(--primary);cursor:pointer}
+
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">M</div>
+        <div>
+          <h1>MarkettingHUB</h1>
+          <div style="font-size:12px;color:var(--muted)">Mini marketplace prototype</div>
+        </div>
+      </div>
+      <div class="controls">
+        <input id="top-search" placeholder="Search products..." style="padding:8px 10px;border-radius:8px;border:1px solid #eee" />
+        <button class="ghost" id="open-login">Login</button>
+        <button id="open-cart">Cart (<span id="cart-count">0</span>)</button>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="display:flex;gap:8px;align-items:center">
+              <h3 style="margin:0">Products</h3>
+              <div style="font-size:13px;color:var(--muted)">Browse items</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="filter-category" style="padding:8px;border-radius:8px;border:1px solid #eee">
+                <option value="">All Categories</option>
+              </select>
+              <button id="btn-add-product" class="ghost">+ Add</button>
+            </div>
+          </div>
+
+          <div class="search-row">
+            <input id="mobile-search" placeholder="Filter by title..." />
+          </div>
+
+          <div id="products-list" class="list"></div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3 style="margin-top:0">Product Detail</h3>
+          <div id="product-detail" class="muted">Select a product to view full details.</div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <div class="card section">
+          <div style="display:flex;gap:12px;align-items:center">
+            <div class="avatar" id="sidebar-avatar">G</div>
+            <div>
+              <div id="sidebar-username">Guest</div>
+              <div style="font-size:13px;color:var(--muted)" id="sidebar-email">Not signed in</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card section">
+          <h4 style="margin:0 0 8px 0">Navigation</h4>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button id="nav-mylist" class="ghost nav-link">My Listings</button>
+            <button id="nav-profile" class="ghost nav-link">Profile</button>
+            <button id="nav-purchases" class="ghost nav-link">Previous Purchases</button>
+            <button id="btn-logout" class="ghost nav-link" style="display:none">Logout</button>
+          </div>
+        </div>
+
+        <div class="card section">
+          <h4 style="margin:0 0 8px 0">Categories</h4>
+          <div id="category-list" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      MarkettingHUB prototype — client-side only. Data stored in localStorage.
+    </footer>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal" id="modal-login">
+    <div class="sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3 id="auth-title">Login</h3>
+        <button class="ghost" id="close-login">Close</button>
+      </div>
+      <div id="auth-forms">
+        <div id="form-login">
+          <div class="form-row"><label>Email</label><input id="login-email" type="email" /></div>
+          <div class="form-row"><label>Password</label><input id="login-password" type="password" /></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="ghost" id="to-signup">Sign up</button>
+            <button id="do-login">Login</button>
+          </div>
+        </div>
+        <div id="form-signup" style="display:none">
+          <div class="form-row"><label>Username</label><input id="signup-username" type="text" /></div>
+          <div class="form-row"><label>Email</label><input id="signup-email" type="email" /></div>
+          <div class="form-row"><label>Password</label><input id="signup-password" type="password" /></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="ghost" id="to-login">Back</button>
+            <button id="do-signup">Create account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-add">
+    <div class="sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3 id="add-title">Add New Product</h3>
+        <button class="ghost" id="close-add">Close</button>
+      </div>
+      <div class="form-row"><label>Product Title</label><input id="prod-title" type="text" /></div>
+      <div class="form-row"><label>Category</label><select id="prod-category"></select></div>
+      <div class="form-row"><label>Description</label><textarea id="prod-desc"></textarea></div>
+      <div class="form-row"><label>Price (₹)</label><input id="prod-price" type="number" /></div>
+      <div class="form-row"><label>Image URL (optional)</label><input id="prod-image" type="text" placeholder="https://..."/></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button class="ghost" id="submit-cancel">Cancel</button>
+        <button id="submit-product">Submit Listing</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-cart">
+    <div class="sheet">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3>Your Cart</h3>
+        <button class="ghost" id="close-cart">Close</button>
+      </div>
+      <div id="cart-contents"></div>
+    </div>
+  </div>
+
+  <script>
+    // Data & storage: object maps for O(1) access
+    const CATEGORIES = ['Electronics','Clothing','Home & Kitchen','Sports & Outdoors','Books'];
+    const IMAGES = {
+      'phone':'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&q=80',
+      'tshirt':'https://images.unsplash.com/photo-1520975918319-6c38a6fca4f5?w=1200&q=80',
+      'cook':'https://images.unsplash.com/photo-1606788075761-3b85e1e1a7b2?w=1200&q=80',
+      'ball':'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&q=80',
+      'book':'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1200&q=80'
+    };
+
+    function load(){
+      return {
+        users: JSON.parse(localStorage.getItem('mh_users')||'{}'),
+        products: JSON.parse(localStorage.getItem('mh_products')||'{}'),
+        cart: JSON.parse(localStorage.getItem('mh_cart')||'{}'),
+        purchases: JSON.parse(localStorage.getItem('mh_purchases')||'{}'),
+        currentUser: localStorage.getItem('mh_current') || null
+      };
+    }
+    function save(s){ localStorage.setItem('mh_users',JSON.stringify(s.users)); localStorage.setItem('mh_products',JSON.stringify(s.products)); localStorage.setItem('mh_cart',JSON.stringify(s.cart)); localStorage.setItem('mh_purchases',JSON.stringify(s.purchases)); if(s.currentUser) localStorage.setItem('mh_current',s.currentUser); else localStorage.removeItem('mh_current'); }
+
+    const uid = ()=> 'id_'+Math.random().toString(36).slice(2,9);
+    let state = load();
+
+    // seed products if empty
+    if(Object.keys(state.products).length===0){
+      const p0 = {id:uid(),title:'Smartphone X',description:'Flagship-style smartphone with great camera',category:'Electronics',price:29999,image:IMAGES.phone,owner:null};
+      const p1 = {id:uid(),title:'Organic Cotton T-Shirt',description:'Comfortable everyday wear',category:'Clothing',price:899,image:IMAGES.tshirt,owner:null};
+      const p2 = {id:uid(),title:'Non-stick Cookware Set',description:'5-piece set for your kitchen',category:'Home & Kitchen',price:4299,image:IMAGES.cook,owner:null};
+      const p3 = {id:uid(),title:'Premium Football',description:'Durable, stitched football for outdoor play',category:'Sports & Outdoors',price:1499,image:IMAGES.ball,owner:null};
+      const p4 = {id:uid(),title:'Bestseller Novel',description:'A gripping story for weekend reading',category:'Books',price:399,image:IMAGES.book,owner:null};
+      state.products = {[p0.id]:p0,[p1.id]:p1,[p2.id]:p2,[p3.id]:p3,[p4.id]:p4}; save(state);
+    }
+
+    // DOM refs
+    const el = id=>document.getElementById(id);
+    const productsList = el('products-list'); const filterCategory = el('filter-category'); const categoryList = el('category-list'); const searchTop = el('top-search'); const searchMobile = el('mobile-search'); const productDetail = el('product-detail'); const userArea = el('sidebar-username'); const sidebarEmail = el('sidebar-email'); const sidebarAvatar = el('sidebar-avatar'); const cartCount = el('cart-count');
+
+    function populateCategories(){
+      filterCategory.innerHTML = '<option value="">All Categories</option>'+CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
+      el('prod-category').innerHTML = CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
+      categoryList.innerHTML = CATEGORIES.map(c=>`<button class="ghost" onclick="applyCat('${c}')">${c}</button>`).join('');
+    }
+
+    function currentUser(){ const id=state.currentUser; if(!id) return null; return state.users[id]||null; }
+
+    function renderUser(){ const u=currentUser(); if(u){ el('sidebar-username').textContent = u.username; sidebarEmail.textContent = u.email; sidebarAvatar.textContent = (u.username||'U').slice(0,1).toUpperCase(); el('btn-logout').style.display='inline-block'; } else { el('sidebar-username').textContent='Guest'; sidebarEmail.textContent='Not signed in'; sidebarAvatar.textContent='G'; el('btn-logout').style.display='none'; } updateCartCount(); }
+
+    function updateCartCount(){ const u=currentUser(); let count=0; if(u){ count = (state.cart[u.id]||[]).length; } cartCount.textContent = count; }
+
+    function renderProducts(){
+      const q = (searchTop.value||searchMobile.value||'').trim().toLowerCase(); const cat = filterCategory.value;
+      const list = Object.values(state.products).filter(p=>{ if(cat && p.category!==cat) return false; if(q && !p.title.toLowerCase().includes(q)) return false; return true; }).sort((a,b)=>a.title.localeCompare(b.title));
+      if(list.length===0) productsList.innerHTML='<div class="muted">No products found.</div>';
+      else productsList.innerHTML = list.map(p=>`
+        <div class="product card" data-id="${p.id}">
+          <div class="thumb"><img src="${p.image||''}" alt="${p.title}"/></div>
+          <div class="pmeta">
+            <h3>${escapeHtml(p.title)}</h3>
+            <p class="small muted">${escapeHtml(p.category)}</p>
+          </div>
+          <div style="text-align:right">
+            <div class="price">₹${Number(p.price).toLocaleString()}</div>
+            <div style="margin-top:8px"><button class="ghost" onclick="viewDetails('${p.id}')">View</button></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+
+    function viewDetails(id){ const p = state.products[id]; if(!p) return; productDetail.innerHTML = `
+      <div class="product-detail">
+        <div class="pd-img"><img src="${p.image||''}" alt="${p.title}"/></div>
+        <div>
+          <h2 style="margin-top:0">${escapeHtml(p.title)}</h2>
+          <div class="price">₹${Number(p.price).toLocaleString()}</div>
+          <div class="small muted">${escapeHtml(p.category)}</div>
+          <p style="margin-top:12px">${escapeHtml(p.description)}</p>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button id="btn-add-to-cart">Add to Cart</button>
+            <button class="ghost" onclick="buyNow('${p.id}')">Buy Now</button>
+          </div>
+        </div>
+      </div>
+    `; setTimeout(()=>{ el('btn-add-to-cart').onclick = ()=>addToCart(id); },0);
+    }
+
+    function addToCart(productId){ const u=currentUser(); if(!u){ openLogin(); return; } state.cart[u.id]=state.cart[u.id]||[]; state.cart[u.id].push(productId); save(state); updateCartCount(); alert('Added to cart'); }
+    function buyNow(id){ const u=currentUser(); if(!u){ openLogin(); return; } state.purchases[u.id]=state.purchases[u.id]||[]; state.purchases[u.id].push(id); save(state); alert('Purchase recorded'); }
+
+    function applyCat(c){ filterCategory.value=c; renderProducts(); }
+
+    // Auth
+    function openLogin(){ el('modal-login').classList.add('show'); }
+    function closeLogin(){ el('modal-login').classList.remove('show'); }
+    function openAdd(){ const u=currentUser(); if(!u){ openLogin(); return; } el('modal-add').classList.add('show'); el('add-title').textContent='Add New Product'; clearAddForm(); }
+    function closeAdd(){ el('modal-add').classList.remove('show'); }
+
+    function clearAddForm(){ el('prod-title').value=''; el('prod-desc').value=''; el('prod-price').value=''; el('prod-image').value=''; el('prod-category').value = CATEGORIES[0]; }
+
+    function doSignup(){ const uname = el('signup-username').value.trim(); const email = el('signup-email').value.trim().toLowerCase(); const pw = el('signup-password').value; if(!uname||!email||!pw){ alert('Please fill all fields'); return; } if(Object.values(state.users).some(u=>u.email===email)){ alert('Email already registered'); return; } const id=uid(); state.users[id]={id,username:uname,email,password:pw}; state.currentUser = id; save(state); closeLogin(); renderUser(); }
+    function doLogin(){ const email = el('login-email').value.trim().toLowerCase(); const pw = el('login-password').value; const user = Object.values(state.users).find(u=>u.email===email && u.password===pw); if(!user){ alert('Invalid credentials'); return; } state.currentUser = user.id; save(state); closeLogin(); renderUser(); }
+
+    function logout(){ if(!confirm('Logout?')) return; state.currentUser=null; save(state); renderUser(); }
+
+    // add product
+    function submitProduct(){ const t=el('prod-title').value.trim(); const cat=el('prod-category').value; const desc=el('prod-desc').value.trim(); const price=Number(el('prod-price').value||0); const img=el('prod-image').value.trim()||''; if(!t||!cat||!desc||!price){ alert('Complete required fields'); return; } const id=uid(); state.products[id]={id,title:t,description:desc,category:cat,price:price,image:img||'',owner:state.currentUser}; save(state); closeAdd(); renderProducts(); alert('Product added'); }
+
+    // My listings
+    function showMyListings(){ const u=currentUser(); if(!u){ openLogin(); return; } const my = Object.values(state.products).filter(p=>p.owner===u.id); if(my.length===0){ productDetail.innerHTML='<div class="muted">You have no listings.</div>'; return; } productDetail.innerHTML = `<div><h3>My Listings</h3><div style="display:flex;flex-direction:column;gap:8px">${my.map(p=>`<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center"><div class="thumb"><img src="${p.image||''}"/></div><div><div style="font-weight:600">${escapeHtml(p.title)}</div><div class="small muted">₹${Number(p.price).toLocaleString()}</div></div></div><div style="display:flex;gap:8px"><button class="ghost" onclick="editListing('${p.id}')">Edit</button><button class="ghost" onclick="deleteListing('${p.id}')">Delete</button></div></div>`).join('')}</div></div>`; }
+
+    function editListing(id){ const p=state.products[id]; if(!p) return; el('modal-add').classList.add('show'); el('add-title').textContent='Edit Product'; el('prod-title').value=p.title; el('prod-category').value=p.category; el('prod-desc').value=p.description; el('prod-price').value=p.price; el('prod-image').value=p.image||''; const submitBtn = el('submit-product'); const old = submitBtn.onclick; submitBtn.onclick = ()=>{ p.title=el('prod-title').value.trim(); p.category=el('prod-category').value; p.description=el('prod-desc').value.trim(); p.price=Number(el('prod-price').value||0); p.image=el('prod-image').value.trim(); state.products[id]=p; save(state); submitBtn.onclick = old; closeAdd(); renderProducts(); alert('Updated'); }; }
+
+    function deleteListing(id){ if(!confirm('Delete listing?')) return; delete state.products[id]; save(state); renderProducts(); alert('Deleted'); }
+
+    // cart
+    function openCart(){ const u=currentUser(); if(!u){ openLogin(); return; } el('modal-cart').classList.add('show'); renderCart(); }
+    function closeCart(){ el('modal-cart').classList.remove('show'); }
+
+    function renderCart(){ const u=currentUser(); const items = (state.cart[u.id]||[]).map(id=>state.products[id]).filter(Boolean); if(items.length===0){ el('cart-contents').innerHTML='<div class="muted">Cart is empty.</div>'; return; } el('cart-contents').innerHTML = `<div style="display:flex;flex-direction:column;gap:8px">${items.map((p,idx)=>`<div class="cart-item card"><div class="thumb"><img src="${p.image||''}"/></div><div style="flex:1"><div style="font-weight:600">${escapeHtml(p.title)}</div><div class="small muted">₹${Number(p.price).toLocaleString()}</div></div><div style="display:flex;flex-direction:column;gap:6px"><button class="ghost" onclick="removeFromCart('${p.id}', ${idx})">Remove</button><button onclick="checkout()">Checkout</button></div></div>`).join('')}</div>`; }
+
+    function removeFromCart(prodId, idx){ const u=currentUser(); if(!u) return; state.cart[u.id] = (state.cart[u.id]||[]).filter((v,i)=>i!==idx); save(state); updateCartCount(); renderCart(); }
+    function checkout(){ const u=currentUser(); if(!u) return; const items = state.cart[u.id]||[]; if(items.length===0){ alert('Cart empty'); return; } state.purchases[u.id]=state.purchases[u.id]||[]; state.purchases[u.id].push(...items); state.cart[u.id]=[]; save(state); updateCartCount(); alert('Checkout complete'); renderCart(); }
+
+    // purchases
+    function showPurchases(){ const u=currentUser(); if(!u){ openLogin(); return; } const list = (state.purchases[u.id]||[]).map(id=>state.products[id]).filter(Boolean); if(list.length===0){ productDetail.innerHTML='<div class="muted">No previous purchases</div>'; return; } productDetail.innerHTML = `<div><h3>Previous Purchases</h3><div style="display:flex;flex-direction:column;gap:8px">${list.map(p=>`<div class="card"><div style="display:flex;gap:10px;align-items:center"><div class="thumb"><img src="${p.image||''}"/></div><div><div style="font-weight:600">${escapeHtml(p.title)}</div><div class="small muted">₹${Number(p.price).toLocaleString()}</div></div></div></div>`).join('')}</div></div>`; }
+
+    // tiny helpers
+    document.addEventListener('click', e=>{ if(e.target.classList.contains('modal')) e.target.classList.remove('show'); });
+
+    // wire events
+    el('open-login').onclick = openLogin; el('close-login').onclick = closeLogin; el('to-signup').onclick = ()=>{ el('form-login').style.display='none'; el('form-signup').style.display='block'; el('auth-title').textContent='Sign up'; };
+    el('to-login').onclick = ()=>{ el('form-login').style.display='block'; el('form-signup').style.display='none'; el('auth-title').textContent='Login'; };
+    el('do-signup').onclick = doSignup; el('do-login').onclick = doLogin; el('btn-add-product').onclick = openAdd; el('close-add').onclick = closeAdd; el('submit-cancel').onclick = closeAdd; el('submit-product').onclick = submitProduct; el('open-cart').onclick = openCart; el('close-cart').onclick = closeCart; el('nav-mylist').onclick = showMyListings; el('nav-profile').onclick = ()=>{ const u=currentUser(); if(!u){ openLogin(); return; } productDetail.innerHTML = `<div><h3>Profile</h3><div class="card"><div style="display:flex;gap:10px;align-items:center"><div class="avatar">${(u.username||'U').slice(0,1).toUpperCase()}</div><div><div style="font-weight:600">${escapeHtml(u.username)}</div><div class="small muted">${escapeHtml(u.email)}</div></div></div></div></div>`; }; el('nav-purchases').onclick = showPurchases; el('btn-logout').onclick = logout;
+
+    el('top-search').addEventListener('input', renderProducts); el('mobile-search').addEventListener('input', renderProducts); el('filter-category').addEventListener('change', renderProducts);
+
+    window.applyCat = applyCat; window.viewDetails = viewDetails; window.editListing = editListing; window.deleteListing = deleteListing; window.removeFromCart = removeFromCart; window.buyNow = buyNow;
+
+    // init
+    populateCategories(); renderUser(); renderProducts();
+  </script>
+</body>
+</html>   
